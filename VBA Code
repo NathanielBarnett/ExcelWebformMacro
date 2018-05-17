@@ -16,7 +16,7 @@ Sub Vba2HtmlForm()
        'IF Already submitted then go to next record
        If Sheets(dataName).Cells(loopRow.row, 10) = UCase("submitted") Then GoTo NextIteration
        
-       ie.navigate "https://b2borders.kansascitysteaks.com/catalog-unsubscribe"
+       ie.navigate "WEBFORM-URL-HERE"
        While ie.Busy: DoEvents: Wend
        Do While ie.ReadyState <> 4: DoEvents: Loop
        
