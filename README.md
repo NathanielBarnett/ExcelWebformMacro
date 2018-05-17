@@ -1,2 +1,2 @@
 # ExcelWebformMacro
-Excel Macro to fill out a webform.
+Excel Macro (written in VBA) to fill out a webform.
