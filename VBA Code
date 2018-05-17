@@ -1,0 +1,134 @@
+Sub Vba2HtmlForm()
+   Dim ie      As Object
+   Dim frm     As Variant
+   Dim element As Variant
+   Dim submitButton As Variant
+
+   Set ie = CreateObject("InternetExplorer.Application")
+   ie.Visible = True
+    
+    Dim dataName As String
+    dataName = "UnsubscribeData"
+    For Each loopRow In Sheets(dataName).UsedRange.Rows:
+        'IF header line of spreadsheet, then continue to next line
+       If loopRow.row = 1 Then GoTo NextIteration
+       
+       'IF Already submitted then go to next record
+       If Sheets(dataName).Cells(loopRow.row, 10) = UCase("submitted") Then GoTo NextIteration
+       
+       ie.navigate "https://b2borders.kansascitysteaks.com/catalog-unsubscribe"
+       While ie.Busy: DoEvents: Wend
+       Do While ie.ReadyState <> 4: DoEvents: Loop
+       
+       'try to get form by ID
+       Set frm = ie.document.all
+       'ie.Visible = True
+       
+       For Each element In frm
+          On Error Resume Next
+          
+          Select Case element.Name
+             Case "fname":
+                If Not Sheets(dataName).Cells(loopRow.row, 1) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 1))
+                End If
+             Case "lname":
+                If Not Sheets(dataName).Cells(loopRow.row, 2) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 2))
+                End If
+             Case "customer_num":
+                If Not Sheets(dataName).Cells(loopRow.row, 3) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 3))
+                End If
+             Case "address_1":
+                If Not Sheets(dataName).Cells(loopRow.row, 4) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 4))
+                End If
+             Case "address_2":
+                If Not Sheets(dataName).Cells(loopRow.row, 5) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 5))
+                End If
+             Case "city":
+                If Not Sheets(dataName).Cells(loopRow.row, 6) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 6))
+                End If
+             Case "state":
+                If Not Sheets(dataName).Cells(loopRow.row, 7) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 7))
+                End If
+             Case "postal_code":
+                If Not Sheets(dataName).Cells(loopRow.row, 8) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 8))
+                End If
+             Case "priority_code":
+                If Not Sheets(dataName).Cells(loopRow.row, 9) = "" Then
+                element.Value = UCase(Sheets(dataName).Cells(loopRow.row, 9))
+                End If
+          
+          End Select
+          
+          If element.getAttribute("class") = "btn btn-lg btn-danger btn-block" Then
+          'Application.Wait (Now + TimeValue("0:00:00"))
+          element.Click
+          End If
+          
+
+       Next
+         While ie.Busy: DoEvents: Wend
+         Do While ie.ReadyState <> 4: DoEvents: Loop
+         For Each element In ie.document.all:
+            If element.innerText = "You Have Been Unsubscribed" Then
+            Sheets(dataName).Cells(loopRow.row, 10) = UCase("submitted")
+            End If
+            
+            Next
+    
+NextIteration:
+    Next
+    
+    ie.Quit
+    Set ie = Nothing
+    
+'    Output problem records to a new sheet.
+    Dim sDate As String
+    sDate = Format(Now(), "m-d-yy")
+    sheetName = "ProblemRecords " & sDate
+    
+    For Each ws In Sheets:
+        If ws.Name = sheetName Then exists = True
+    Next
+    
+    If Not exists Then
+    Sheets.Add.Name = sheetName
+    End If
+    
+    Dim NewWS As Worksheet
+    Set NewWS = Sheets(sheetName)
+    Dim row As Integer
+    row = 1
+
+    For Each loopRow In Sheets(dataName).UsedRange.Rows:
+        If Not Sheets(dataName).Cells(loopRow.row, 10) = "SUBMITTED" Then
+            NewWS.Cells(row, 1) = Sheets(dataName).Cells(loopRow.row, 1)
+            NewWS.Cells(row, 2) = Sheets(dataName).Cells(loopRow.row, 2)
+            NewWS.Cells(row, 3) = Sheets(dataName).Cells(loopRow.row, 3)
+            NewWS.Cells(row, 4) = Sheets(dataName).Cells(loopRow.row, 4)
+            NewWS.Cells(row, 5) = Sheets(dataName).Cells(loopRow.row, 5)
+            NewWS.Cells(row, 6) = Sheets(dataName).Cells(loopRow.row, 6)
+            NewWS.Cells(row, 7) = Sheets(dataName).Cells(loopRow.row, 7)
+            NewWS.Cells(row, 8) = Sheets(dataName).Cells(loopRow.row, 8)
+            NewWS.Cells(row, 9) = Sheets(dataName).Cells(loopRow.row, 9)
+            'Copy header line, if not header line, then insert NOT_SUBMITTED
+            If loopRow.row = 1 Then
+                NewWS.Cells(row, 10) = Sheets(dataName).Cells(loopRow.row, 10)
+            Else
+                NewWS.Cells(row, 10) = UCase("not_submitted")
+            End If
+            row = row + 1
+
+        End If
+
+        Next
+    Sheets(sheetName).Cells.EntireColumn.AutoFit
+    
+End Sub
